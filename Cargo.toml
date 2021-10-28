@@ -6,5 +6,12 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = {git="https://github.com/bevyengine/bevy", rev="6a8a8c9d21f32e0e46623db9438813b009f9e014"}
-bevy_rapier3d = { git="https://github.com/dimforge/bevy_rapier", rev="f3e984c", features = [ "simd-stable" ] }
+alsa = "=0.5.0"
+
+[dependencies.bevy]
+git = "https://github.com/bevyengine/bevy"
+rev="6a8a8c9d21f32e0e46623db9438813b009f9e014"
+
+[dependencies.heron]
+git = "https://github.com/Niedzwiedzw/heron"
+branch = "bevy-0.6"
