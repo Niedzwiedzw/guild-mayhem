@@ -7,3 +7,4 @@ edition = "2018"
 
 [dependencies]
 bevy = {git="https://github.com/bevyengine/bevy", rev="6a8a8c9d21f32e0e46623db9438813b009f9e014"}
+bevy_rapier3d = { git="https://github.com/dimforge/bevy_rapier", rev="f3e984c", features = [ "simd-stable" ] }
