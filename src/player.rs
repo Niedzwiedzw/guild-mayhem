@@ -7,24 +7,36 @@ use bevy::{
 use heron::prelude::*;
 use std::ops::Add;
 
+use crate::constants::CENTER_Y;
+
 pub struct PlayerPlugin;
 
 pub struct Player;
 
 pub struct Orientation(Quat);
 
-pub fn spawn_player(mut commands: Commands) {
-    let position = Vec3::new(-2.0, 2.5, 5.0);
+pub fn spawn_player(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let position = Vec3::new(-2.0, CENTER_Y as f32, 5.0);
     let orientation = Quat::IDENTITY;
     commands
-        .spawn()
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+            material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+            transform: Transform::from_xyz(0.0, 0.5, 0.0),
+            ..Default::default()
+        })
         .insert(Player)
         .insert(Transform::from_translation(position))
         .insert(Acceleration::from_linear(Vec3::ZERO))
+        .insert(Velocity::from_linear(Vec3::ZERO))
         .insert(Orientation(orientation))
         .insert(RigidBody::Dynamic)
         .insert(CollisionShape::Cuboid {
-            half_extends: Vec3::new(1.0, 1.0, 1.0) / 2.0,
+            half_extends: Vec3::new(3.2, 2.0, 3.2) / 2.0,
             border_radius: None,
         });
 
@@ -49,9 +61,9 @@ pub fn camera_follow_system(
 
 pub fn player_controls_system(
     keyboard_input: Res<Input<KeyCode>>,
-    mut query: Query<(&Player, &mut Acceleration, &Orientation)>,
+    mut query: Query<(&mut Acceleration, &Orientation, &mut Velocity), With<Player>>,
 ) {
-    if let Ok((_, mut acceleration, orientation)) = query.single_mut() {
+    if let Ok((mut acceleration, orientation, mut velocity)) = query.single_mut() {
         let mut acc = Vec3::ZERO;
         if keyboard_input.pressed(KeyCode::W) {
             acc.z -= 1.0;
@@ -65,8 +77,11 @@ pub fn player_controls_system(
         if keyboard_input.pressed(KeyCode::A) {
             acc.x -= 1.0;
         }
+        if keyboard_input.pressed(KeyCode::Space) {
+            *velocity = Velocity::from_linear(velocity.linear + Vec3::Y * 1.0);
+        }
 
-        *acceleration = Acceleration::from_linear(orientation.0.mul_vec3(acc) + acceleration.linear);
+        *acceleration = Acceleration::from_linear(orientation.0.mul_vec3(acc * 10.0));
     }
 }
 
