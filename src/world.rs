@@ -24,22 +24,22 @@ fn setup(
     let height = ChunkHeight { min: 0, max: 126 };
     let mut level = Level::new("overworld".to_string(), env, height, source);
 
-    let size = || -255..255;
+    let size = || 0..32;
 
     for cx in size() {
         for cz in size() {
             level.request_chunk_load(cx, cz);
         }
     }
-    let total_count = 255;
+    
     loop {
+        std::thread::sleep(std::time::Duration::from_secs(1));
         level.load_chunks();
-        let count = level.chunks.get_chunks_count();
-        eprintln!("chunk count: {}/{}", count, total_count);
-        if count > total_count {
+        let count = level.get_loading_chunks_count();
+        eprintln!("chunk count: {}", count);
+        if count == 0 {
             break;
         }
-        std::thread::sleep(std::time::Duration::from_secs(1));
     }
 
     let plane_size = 20.0;
