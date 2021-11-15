@@ -49,8 +49,8 @@ fn setup(
                 // eprint!(".");
                 true
             },
-            Err(_) => {
-                // eprint!("x");
+            Err(e) => {
+                eprintln!("{:?}", e);
                 false
             },
         })
