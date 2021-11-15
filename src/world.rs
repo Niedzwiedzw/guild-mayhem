@@ -31,8 +31,16 @@ fn setup(
             level.request_chunk_load(cx, cz);
         }
     }
-
-    level.load_chunks();
+    let total_count = 255;
+    loop {
+        level.load_chunks();
+        let count = level.chunks.get_chunks_count();
+        eprintln!("chunk count: {}/{}", count, total_count);
+        if count > total_count {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_secs(1));
+    }
 
     let plane_size = 20.0;
     size().flat_map(move |x| size().flat_map(move |y| size().map(move |z| (x, y, z))))
