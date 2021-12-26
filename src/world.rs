@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 use heron::prelude::*;
+use itertools::Itertools;
 use mc_core::world::anvil::source::AnvilLevelSource;
 use mc_core::world::chunk::{Chunk, ChunkHeight, SubChunk};
 use mc_core::world::level::{Level, LevelEnv};
@@ -12,7 +13,7 @@ use crate::constants::CENTER_Y;
 
 pub struct WorldPlugin;
 
-const LEVEL_SAVE: &str = "/home/niedzwiedz/.minecraft/saves/New World";
+const LEVEL_SAVE: &str = "/home/niedzwiedz/.minecraft/saves/test-1132";
 
 fn setup(
     mut commands: Commands,
@@ -24,17 +25,22 @@ fn setup(
     let height = ChunkHeight { min: 0, max: 126 };
     let mut level = Level::new("overworld".to_string(), env, height, source);
 
-    let size = || 0..32;
-
-    for cx in size() {
-        for cz in size() {
+    let size = || 0..256;
+    let chunk_size = || size().map(|i| i / 16).unique();
+    for cx in chunk_size() {
+        for cz in chunk_size() {
             level.request_chunk_load(cx, cz);
         }
     }
-    
+
     loop {
         std::thread::sleep(std::time::Duration::from_secs(1));
-        level.load_chunks();
+        level.load_chunks_with_callback(|cx, cz, res| {
+            match res {
+                Err(e) => eprintln!("ERR: [{}/{}] {:?}", cx, cz, e),
+                Ok(c) => eprintln!("success :: {:?}", c.read().unwrap().get_position()),
+            }
+        });
         let count = level.get_loading_chunks_count();
         eprintln!("chunk count: {}", count);
         if count == 0 {
@@ -43,16 +49,17 @@ fn setup(
     }
 
     let plane_size = 20.0;
-    size().flat_map(move |x| size().flat_map(move |y| size().map(move |z| (x, y, z))))
+    size()
+        .flat_map(move |x| size().flat_map(move |y| size().map(move |z| (x, y, z))))
         .filter(|(x, y, z)| match level.chunks.get_block_at(*x, *y, *z) {
             Ok(_) => {
                 // eprint!(".");
                 true
-            },
+            }
             Err(e) => {
-                eprintln!("{:?}", e);
+                // eprintln!("{:?}", e);
                 false
-            },
+            }
         })
         .for_each(|(x, y, z)| {
             eprintln!("loading block :: [{}, {}, {}]", x, y, z);
@@ -70,28 +77,26 @@ fn setup(
                 });
         });
     // plane
-    commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane { size: plane_size })),
-        material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
-        ..Default::default()
-    })
-        .insert(
-            RigidBody::Static
-        )
+    commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Plane { size: plane_size })),
+            material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+            ..Default::default()
+        })
+        .insert(RigidBody::Static)
         .insert(CollisionShape::Cuboid {
             half_extends: Vec3::new(plane_size, 0.001, plane_size) / 2.0,
             border_radius: None,
         });
     // cube
-    commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-        material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-        transform: Transform::from_xyz(0.0, CENTER_Y as f32, 0.0),
-        ..Default::default()
-    })
-        .insert(
-            RigidBody::Dynamic
-        )
+    commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+            material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+            transform: Transform::from_xyz(0.0, CENTER_Y as f32, 0.0),
+            ..Default::default()
+        })
+        .insert(RigidBody::Dynamic)
         .insert(CollisionShape::Cuboid {
             half_extends: Vec3::new(1.0, 1.0, 1.0) / 2.0,
             border_radius: None,
