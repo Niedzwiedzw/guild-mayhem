@@ -1,6 +1,7 @@
 pub mod player;
 pub mod world;
 pub mod constants;
+pub mod debug_screen;
 
 use bevy::prelude::*;
 use heron::prelude::*;

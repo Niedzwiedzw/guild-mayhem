@@ -20,7 +20,7 @@ pub fn spawn_player(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let position = Vec3::new(-2.0, CENTER_Y as f32, 5.0);
+    let position = Vec3::new(-2.0, 80.0, 5.0);
     let orientation = Quat::IDENTITY;
     commands
         .spawn_bundle(PbrBundle {
